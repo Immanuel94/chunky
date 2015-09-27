@@ -37,22 +37,21 @@ public abstract class TextureRef {
 	}
 
 	/**
-	 * Attempt to load a texture from a texture pack
+	 * Attempt to load a texture from a texture pack.
 	 * @param texturePack Reference to the texture pack zip file
 	 * @return <code>true</code> if the texture was successfully loaded
 	 */
 	public abstract boolean load(ZipFile texturePack);
 
 	/**
-	 * Attempt to load a texture from a texture pack
+	 * Attempt to load a texture from a texture pack.
 	 * @param file Path of texture in texture pack
 	 * @param texturePack Reference to the texture pack zip file
 	 * @return <code>true</code> if the texture was successfully loaded
 	 */
 	protected boolean load(String file, ZipFile texturePack) {
 		try {
-			InputStream in = texturePack.getInputStream(
-					new ZipEntry(file + ".png"));
+			InputStream in = texturePack.getInputStream(new ZipEntry(file + ".png"));
 			if (in != null) {
 				return load(in);
 			}
@@ -64,7 +63,7 @@ public abstract class TextureRef {
 	}
 
 	/**
-	 * Load this texture from the terrain spritemap
+	 * Load this texture from the terrain spritemap.
 	 * @param terrain
 	 * @return <code>true</code> if the texture was successfully loaded
 	 */

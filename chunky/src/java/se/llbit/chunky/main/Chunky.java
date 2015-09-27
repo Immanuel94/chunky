@@ -21,8 +21,13 @@ import java.awt.Insets;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.util.Collection;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -30,6 +35,8 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import se.llbit.chunky.PersistentSettings;
+import se.llbit.chunky.api.Plugin;
+import se.llbit.chunky.api.PluginClassLoader;
 import se.llbit.chunky.map.WorldRenderer;
 import se.llbit.chunky.renderer.BenchmarkManager;
 import se.llbit.chunky.renderer.ConsoleRenderListener;
@@ -64,6 +71,9 @@ import se.llbit.chunky.world.RegionParser;
 import se.llbit.chunky.world.RegionQueue;
 import se.llbit.chunky.world.World;
 import se.llbit.chunky.world.listeners.ChunkTopographyListener;
+import se.llbit.json.JsonParser;
+import se.llbit.json.JsonParser.SyntaxError;
+import se.llbit.json.JsonValue;
 import se.llbit.log.Log;
 import se.llbit.math.Vector3d;
 import se.llbit.util.OSDetector;
@@ -149,6 +159,13 @@ public class Chunky implements ChunkTopographyListener {
 		CommandLineOptions cmdline = new CommandLineOptions(args);
 		options = cmdline.options;
 
+		if (!options.plugins.isEmpty()) {
+			String[] plugins = options.plugins.split(",");
+			for (String plugin : plugins) {
+				attachPlugin(plugin);
+			}
+		}
+
 		if (cmdline.confError) {
 			return 1;
 		}
@@ -170,6 +187,57 @@ public class Chunky implements ChunkTopographyListener {
 			return 2;
 		}
 		return 0;
+	}
+
+	/**
+	 * Attach a plugin by Jar file path.
+	 * @param path Jar file path.
+	 */
+	private void attachPlugin(String path) {
+		if (path.isEmpty()) {
+			return;
+		}
+		File pluginJar = new File(path);
+		if (!pluginJar.isFile()) {
+			System.err.println("Plugin Jar file not found: " + path);
+		}
+		try {
+			ZipFile jar = new ZipFile(pluginJar);
+			InputStream in = jar.getInputStream(new ZipEntry("plugin.json"));
+			JsonParser parser = new JsonParser(in);
+			JsonValue pluginJson = parser.parse();
+			String mainClass = pluginJson.object().get("mainClass").stringValue("");
+			if (mainClass.isEmpty()) {
+				System.err.format("Error: plugin %s has no mainClass attribute.", path);
+				return;
+			}
+			attachPlugin(pluginJar.toURI().toURL(), mainClass);
+		} catch (ZipException e) {
+			System.err.format("Error: failed to read plugin jar file %s", path);
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.format("Error: failed to read plugin jar file %s", path);
+			e.printStackTrace();
+		} catch (SyntaxError e) {
+			System.err.format("Error: plugin %s has a syntax error in plugin.json.", path);
+			e.printStackTrace();
+		}
+
+	}
+
+	private void attachPlugin(URL url, String mainClass) {
+		PluginClassLoader classLoader = new PluginClassLoader(url);
+		try {
+			Class<?> pluginClass = classLoader.loadClass(mainClass);
+			Plugin plugin = (Plugin) pluginClass.newInstance();
+			plugin.attach(this);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

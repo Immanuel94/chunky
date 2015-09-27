@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Jesper Öqvist <jesper@llbit.se>
+/* Copyright (c) 2014-2015 Jesper Öqvist <jesper@llbit.se>
  *
  * This file is part of Chunky.
  *
@@ -103,8 +103,8 @@ public class CommandLineOptions {
 
 		options.sceneDir = PersistentSettings.getSceneDirectory();
 
-		// parse arguments
-		// TODO in serious need of refactoring
+		// Parse command-line arguments.
+		// TODO(jesper): refactor this code to use some command-line option parsing library.
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("-texture") && args.length > i+1) {
 				options.texturePack = args[++i];
@@ -316,6 +316,16 @@ public class CommandLineOptions {
 					confError = true;
 					break;
 				}
+			} else if (args[i].equals("-plugins")) {
+				if (i+1 == args.length) {
+					System.err.println("Missing argument for -plugins option");
+					confError = true;
+					break;
+				} else {
+					options.plugins = args[i + 1];
+					i += 1;
+				}
+
 			} else if (!args[i].startsWith("-") && !selectedWorld) {
 				options.worldDir = new File(args[i]);
 			} else {

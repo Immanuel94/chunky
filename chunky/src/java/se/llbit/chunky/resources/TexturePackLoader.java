@@ -1366,8 +1366,7 @@ public class TexturePackLoader {
 
 		File defaultTP = MinecraftFinder.getMinecraftJar();
 		boolean isDefault = tpFile.equals(defaultTP);
-		String tpName = isDefault ? "default texture pack"
-				: "texture pack";
+		String tpName = isDefault ? "default texture pack" : "texture pack";
 		tpName += " (" + tpFile.getAbsolutePath() + ")";
 
 		Set<String> notLoaded = new HashSet<String>(toLoad);
@@ -1382,7 +1381,7 @@ public class TexturePackLoader {
 				}
 			}
 
-			// fall back on terrain.png
+			// Fall back on terrain.png.
 			loadTerrainTextures(texturePack, notLoaded);
 
 			if (rememberTP) {

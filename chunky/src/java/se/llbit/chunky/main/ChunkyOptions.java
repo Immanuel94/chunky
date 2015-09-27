@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Jesper Öqvist <jesper@llbit.se>
+/* Copyright (c) 2014-2015 Jesper Öqvist <jesper@llbit.se>
  *
  * This file is part of Chunky.
  *
@@ -21,7 +21,7 @@ import java.io.File;
 import se.llbit.chunky.renderer.RenderConstants;
 
 /**
- * Current configuration
+ * Chunky command-line options are stored in this configuration object.
  * @author Jesper Öqvist <jesper@llbit.se>
  */
 public class ChunkyOptions {
@@ -31,6 +31,9 @@ public class ChunkyOptions {
 	public int renderThreads = -1;
 	public File worldDir = null;
 	public int target = -1;
+
+	/** Comma-separated list of plugin filenames. */
+	public String plugins = "";
 
 	/**
 	 * Whether or not OpenCL rendering is enabled
