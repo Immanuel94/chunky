@@ -1,0 +1,26 @@
+<project name="ExamplePlugin" default="jar">
+
+	<property name="bin.dir" location="ant-bin"/>
+	<property name="src.dir" location="src"/>
+	<property name="lib.dir" location="lib"/>
+	<property name="res.dir" location="res"/>
+
+	<target name="jar">
+		<mkdir dir="${bin.dir}"/>
+		<javac
+			encoding="utf-8"
+			source="1.6"
+			target="1.6"
+			debug="${debug}"
+			destdir="${bin.dir}"
+			includeantruntime="false"
+			classpath="${lib.dir}/chunky-core-1.3.6-alpha2-1-g1180aa2.jar">
+			<src path="${src.dir}"/>
+		</javac>
+
+		<jar destfile="example-plugin.jar">
+			<fileset dir="${bin.dir}"/>
+			<fileset dir="${res.dir}"/>
+		</jar>
+	</target>
+</project>
