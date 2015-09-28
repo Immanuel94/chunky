@@ -322,14 +322,10 @@ public class Chunky implements ChunkTopographyListener {
 	 * Start Chunky normally.
 	 */
 	private void startNormally() {
-		// load the world
-		if (options.worldDir != null && World.isWorldDir(options.worldDir)) {
-			loadWorld(new World(options.worldDir, false));
-		} else {
-			File lastWorldDir = PersistentSettings.getLastWorld();
-			if (lastWorldDir != null && World.isWorldDir(lastWorldDir)) {
-				loadWorld(new World(lastWorldDir, false));
-			}
+		// Load the world.
+		File lastWorldDir = PersistentSettings.getLastWorld();
+		if (lastWorldDir != null && World.isWorldDir(lastWorldDir)) {
+			loadWorld(new World(lastWorldDir, false));
 		}
 
 		// Start the worker threads

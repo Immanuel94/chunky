@@ -29,7 +29,6 @@ public class ChunkyOptions {
 	public String sceneName = null;
 	public String texturePack = null;
 	public int renderThreads = -1;
-	public File worldDir = null;
 	public int target = -1;
 
 	/** Comma-separated list of plugin filenames. */
@@ -49,7 +48,6 @@ public class ChunkyOptions {
 		clone.sceneName = sceneName;
 		clone.texturePack = texturePack;
 		clone.renderThreads = renderThreads;
-		clone.worldDir = worldDir;
 		return clone;
 	}
 }
