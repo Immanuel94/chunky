@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -156,14 +157,23 @@ public class Chunky implements ChunkTopographyListener {
 	 * @return Program exit code (0 = success)
 	 */
 	public int run(String[] args) {
-		CommandLineOptions cmdline = new CommandLineOptions(args);
+		CommandLineOptions cmdline = new CommandLineOptions();
+		List<String> extraArgs = cmdline.parseArguments(args);
 		options = cmdline.options;
 
 		if (!options.plugins.isEmpty()) {
 			String[] plugins = options.plugins.split(",");
 			for (String plugin : plugins) {
-				attachPlugin(plugin);
+				extraArgs = attachPlugin(plugin, extraArgs);
 			}
+		}
+
+		if (!extraArgs.isEmpty()) {
+			for (String arg : extraArgs) {
+				System.err.println("Unrecognized argument: " + arg);
+			}
+			cmdline.printUsage();
+			cmdline.confError = true;
 		}
 
 		if (cmdline.confError) {
@@ -192,10 +202,11 @@ public class Chunky implements ChunkTopographyListener {
 	/**
 	 * Attach a plugin by Jar file path.
 	 * @param path Jar file path.
+	 * @param extraArgs
 	 */
-	private void attachPlugin(String path) {
+	private List<String> attachPlugin(String path, List<String> extraArgs) {
 		if (path.isEmpty()) {
-			return;
+			return extraArgs;
 		}
 		File pluginJar = new File(path);
 		if (!pluginJar.isFile()) {
@@ -209,9 +220,9 @@ public class Chunky implements ChunkTopographyListener {
 			String mainClass = pluginJson.object().get("mainClass").stringValue("");
 			if (mainClass.isEmpty()) {
 				System.err.format("Error: plugin %s has no mainClass attribute.", path);
-				return;
+				return extraArgs;
 			}
-			attachPlugin(pluginJar.toURI().toURL(), mainClass);
+			return attachPlugin(pluginJar.toURI().toURL(), mainClass, extraArgs);
 		} catch (ZipException e) {
 			System.err.format("Error: failed to read plugin jar file %s", path);
 			e.printStackTrace();
@@ -222,15 +233,15 @@ public class Chunky implements ChunkTopographyListener {
 			System.err.format("Error: plugin %s has a syntax error in plugin.json.", path);
 			e.printStackTrace();
 		}
-
+		return extraArgs;
 	}
 
-	private void attachPlugin(URL url, String mainClass) {
+	private List<String> attachPlugin(URL url, String mainClass, List<String> extraArgs) {
 		PluginClassLoader classLoader = new PluginClassLoader(url);
 		try {
 			Class<?> pluginClass = classLoader.loadClass(mainClass);
 			Plugin plugin = (Plugin) pluginClass.newInstance();
-			plugin.attach(this);
+			return plugin.attach(this, extraArgs);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
@@ -238,6 +249,7 @@ public class Chunky implements ChunkTopographyListener {
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		}
+		return extraArgs;
 	}
 
 	/**

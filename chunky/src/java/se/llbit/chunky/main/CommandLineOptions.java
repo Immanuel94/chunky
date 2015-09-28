@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.jastadd.util.PrettyPrinter;
@@ -56,41 +57,42 @@ public class CommandLineOptions {
 	/**
 	 * The help string
 	 */
-	private static final String USAGE =
-		"Usage: chunky [OPTIONS] [WORLD DIRECTORY]\n" +
-		"Options:\n" +
-		"  -texture <FILE>        use FILE as the texture pack (must be a Zip file)\n" +
-		"  -render <SCENE>        render the specified scene (see notes)\n" +
-		"  -snapshot <SCENE> [PNG] create a snapshot of the specified scene\n" +
-		"  -scene-dir <DIR>       use the directory DIR for loading/saving scenes\n" +
-		"  -benchmark             run the benchmark and exit\n" +
-		"  -threads <NUM>         use the specified number of threads for rendering\n" +
-		"  -tile-width <NUM>      use the specified job tile width\n" +
-		"  -target <NUM>          override target SPP to be NUM in headless mode\n" +
-		"  -opencl                enables OpenCL rendering in the GUI\n" +
-		"  -set <NAME> <VALUE>    set a global configuration option and exit\n" +
-		"  -reset <NAME>          reset a global configuration option and exit\n" +
-		"  -set <NAME> <VALUE> <SCENE>\n" +
-		"                         set a configuration option for a scene and exit\n" +
-		"  -reset <NAME> <SCENE>  reset a configuration option for a scene and exit\n" +
-		"  -reset <NAME> <SCENE>  reset a configuration option for a scene and exit\n" +
-		"  -download-mc <VERSION> download the given Minecraft version and exit\n" +
-		"  -help                  show this text\n" +
-		"\n" +
-		"Notes:\n" +
-		"<SCENE> can be either the path to a Scene Description File (" + SceneDescription.SCENE_DESCRIPTION_EXTENSION + "),\n" +
-		"*OR* the name of a scene relative to the scene directory (excluding extension).\n" +
-		"If the scene name is an absolute path then the scene directory will be the\n" +
-		"parent directory of the Scene Description File, otherwise the scene directory\n" +
-		"can be overridden temporarily by the -scene-dir option.\n" +
-		"\n" +
-		"Launcher options:\n" +
-		"  --update              download the latest version of Chunky and exit\n" +
-		"  --setup               configure memory limit and Java options for Chunky\n" +
-		"  --nolauncher          start Chunky as normal, but without opening launcher\n" +
-		"  --launcher            forces the launcher window to be displayed\n" +
-		"  --version             print the launcher version and exit\n" +
-		"  --verbose             verbose logging in the launcher\n";
+	private static final String USAGE = String.format(
+			"Usage: chunky [OPTIONS]\n"
+			+ "Options:\n"
+			+ "  -texture <FILE>        use FILE as the texture pack (must be a Zip file)\n"
+			+ "  -render <SCENE>        render the specified scene (see notes)\n"
+			+ "  -snapshot <SCENE> [PNG] create a snapshot of the specified scene\n"
+			+ "  -scene-dir <DIR>       use the directory DIR for loading/saving scenes\n"
+			+ "  -benchmark             run the benchmark and exit\n"
+			+ "  -threads <NUM>         use the specified number of threads for rendering\n"
+			+ "  -tile-width <NUM>      use the specified job tile width\n"
+			+ "  -target <NUM>          override target SPP to be NUM in headless mode\n"
+			+ "  -opencl                enables OpenCL rendering in the GUI\n"
+			+ "  -set <NAME> <VALUE>    set a global configuration option and exit\n"
+			+ "  -reset <NAME>          reset a global configuration option and exit\n"
+			+ "  -set <NAME> <VALUE> <SCENE>\n"
+			+ "                         set a configuration option for a scene and exit\n"
+			+ "  -reset <NAME> <SCENE>  reset a configuration option for a scene and exit\n"
+			+ "  -reset <NAME> <SCENE>  reset a configuration option for a scene and exit\n"
+			+ "  -download-mc <VERSION> download the given Minecraft version and exit\n"
+			+ "  -help                  show this text\n"
+			+ "\n"
+			+ "Notes:\n"
+			+ "<SCENE> can be either the path to a Scene Description File (%s),\n"
+			+ "*OR* the name of a scene relative to the scene directory (excluding extension).\n"
+			+ "If the scene name is an absolute path then the scene directory will be the\n"
+			+ "parent directory of the Scene Description File, otherwise the scene directory\n"
+			+ "can be overridden temporarily by the -scene-dir option.\n"
+			+ "\n"
+			+ "Launcher options:\n"
+			+ "  --update              download the latest version of Chunky and exit\n"
+			+ "  --setup               configure memory limit and Java options for Chunky\n"
+			+ "  --nolauncher          start Chunky as normal, but without opening launcher\n"
+			+ "  --launcher            forces the launcher window to be displayed\n"
+			+ "  --version             print the launcher version and exit\n"
+			+ "  --verbose             verbose logging in the launcher\n",
+			SceneDescription.SCENE_DESCRIPTION_EXTENSION);
 
 	protected boolean confError = false;
 
@@ -98,8 +100,12 @@ public class CommandLineOptions {
 
 	protected ChunkyOptions options = new ChunkyOptions();
 
-	public CommandLineOptions(String[] args) {
-		boolean selectedWorld = false;
+	/**
+	 * @param args command-line arguments
+	 * @return leftover arguments
+	 */
+	public List<String> parseArguments(String[] args) {
+		List<String> extraArgs = new LinkedList<String>();
 
 		options.sceneDir = PersistentSettings.getSceneDirectory();
 
@@ -190,11 +196,11 @@ public class CommandLineOptions {
 						scene.saveFrame(new File(pngFileName), listener);
 						System.out.println("Saved snapshot to " + pngFileName);
 					} catch (IOException e) {
-						System.err.println("Failed to dump snapshot: " +
-								e.getMessage());
+						System.err.println("Failed to dump snapshot: " + e.getMessage());
 					}
 					i += 1;
-					return;
+					// TODO(jesper): check remaining args?
+					return Collections.emptyList();
 				} else {
 					System.err.println("You must specify a scene name for the -snapshot command!");
 					printAvailableScenes();
@@ -232,7 +238,8 @@ public class CommandLineOptions {
 								e.getMessage());
 					}
 					i += 3;
-					return;
+					// TODO(jesper): check remaining args?
+					return Collections.emptyList();
 				} else if (args.length > i+2) {
 					String name = args[i+1];
 					String value = args[i+2];
@@ -242,7 +249,8 @@ public class CommandLineOptions {
 						PersistentSettings.setStringOption(name, value);
 					}
 					i += 2;
-					return;
+					// TODO(jesper): check remaining args?
+					return Collections.emptyList();
 				} else {
 					System.err.println("Too few arguments for -set option!");
 					confError = true;
@@ -277,11 +285,13 @@ public class CommandLineOptions {
 								e.getMessage());
 					}
 					i += 2;
-					return;
+					// TODO(jesper): check remaining args?
+					return Collections.emptyList();
 				} else if (args.length > i+1) {
 					PersistentSettings.resetOption(args[i+1]);
 					i += 1;
-					return;
+					// TODO(jesper): check remaining args?
+					return Collections.emptyList();
 				} else {
 					System.err.println("Too few arguments for -reset option!");
 					confError = true;
@@ -326,9 +336,9 @@ public class CommandLineOptions {
 					i += 1;
 				}
 
-			} else if (!args[i].startsWith("-") && !selectedWorld) {
-				options.worldDir = new File(args[i]);
 			} else {
+				extraArgs.add(args[i]);
+				// TODO: check for extra args in main.
 				System.err.println("Unrecognized argument: "+args[i]);
 				printUsage();
 				confError = true;
@@ -383,6 +393,8 @@ public class CommandLineOptions {
 		if (options.sceneName != null) {
 			mode = Mode.HEADLESS_RENDER;
 		}
+
+		return extraArgs;
 	}
 
 	private void printAvailableScenes() {
@@ -402,7 +414,7 @@ public class CommandLineOptions {
 		}
 	}
 
-	private void printUsage() {
+	void printUsage() {
 		System.out.println("Chunky " + Version.getVersion());
 		System.out.println(USAGE);
 		System.out.println();

@@ -16,6 +16,8 @@
  */
 package se.llbit.chunky.api;
 
+import java.util.List;
+
 import se.llbit.chunky.main.Chunky;
 
 /**
@@ -27,6 +29,8 @@ public interface Plugin {
 	 * This method is called by Chunky while loading the plugin, and should be used
 	 * to start up the plugin. A reference to the core Chunky object is passed to
 	 * the plugin via this method.
+	 * @param extraArgs command-line arguments left over after Chunky removes its arguments.
+	 * @return the arguments left over this plugin has removed its own arguments.
 	 */
-	void attach(Chunky chunky);
+	List<String> attach(Chunky chunky, List<String> extraArgs);
 }
